@@ -61,6 +61,13 @@ export const menuItems = [
     isHide: true,
     link: '/admin/action-logs/list'
   },
+  {
+    title: "Categories",
+    icon: "heroicons-outline:tag",
+    isOpen: true,
+    isHide: true,
+    link: '/categories'
+  },
 
 
 
