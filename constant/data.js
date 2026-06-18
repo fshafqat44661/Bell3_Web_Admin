@@ -68,6 +68,41 @@ export const menuItems = [
     isHide: true,
     link: '/categories'
   },
+  {
+    title: "Coin Management",
+    icon: "heroicons-outline:currency-dollar",
+    isOpen: true,
+    isHide: true,
+    link: '/coins/packages'
+  },
+  {
+    title: "Transactions",
+    icon: "heroicons-outline:arrows-right-left",
+    isOpen: true,
+    isHide: true,
+    link: '/transactions'
+  },
+  {
+    title: "Withdrawals",
+    icon: "heroicons-outline:arrow-up-tray",
+    isOpen: true,
+    isHide: true,
+    link: '/withdrawals'
+  },
+  {
+    title: "Creator Finance",
+    icon: "heroicons-outline:user-group",
+    isOpen: true,
+    isHide: true,
+    link: '/creators/finance'
+  },
+  {
+    title: "User Wallets",
+    icon: "heroicons-outline:wallet",
+    isOpen: true,
+    isHide: true,
+    link: '/users/wallets'
+  },
 
 
 
