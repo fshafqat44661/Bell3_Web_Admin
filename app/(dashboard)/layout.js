@@ -43,6 +43,14 @@ export default function RootLayout({ children }) {
     //darkMode;
   }, [isAuth]);
   const location = usePathname();
+  const [contentWidth] = useContentWidth();
+  const [menuType] = useMenulayout();
+  const [menuHidden] = useMenuHidden();
+  const [mobileMenu, setMobileMenu] = useMobileMenu();
+
+  const showDesktopSidebar =
+    menuType === "vertical" && width >= breakpoints.xl && !menuHidden;
+
   // header switch class
   const switchHeaderClass = () => {
     if (menuType === "horizontal" || menuHidden) {
@@ -54,13 +62,6 @@ export default function RootLayout({ children }) {
     }
   };
 
-  // content width
-  const [contentWidth] = useContentWidth();
-  const [menuType] = useMenulayout();
-  const [menuHidden] = useMenuHidden();
-  // mobile menu
-  const [mobileMenu, setMobileMenu] = useMobileMenu();
-
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
@@ -70,20 +71,22 @@ export default function RootLayout({ children }) {
       `}
     >
       <ToastContainer />
-      <Header className={width > breakpoints.xl ? switchHeaderClass() : ""} />
+      <Header
+        className={showDesktopSidebar ? switchHeaderClass() : ""}
+        showDesktopSidebar={showDesktopSidebar}
+      />
 
       <div className="flex flex-1 overflow-hidden">
-        {menuType === "vertical" && width > breakpoints.xl && !menuHidden && (
-          <Sidebar />
-        )}
+        {showDesktopSidebar && <Sidebar />}
         <MobileMenu
-          className={`${width < breakpoints.xl && mobileMenu
+          className={`${
+            !showDesktopSidebar && mobileMenu
               ? "left-0 visible opacity-100  z-[9999]"
               : "left-[-300px] invisible opacity-0  z-[-999] "
-            }`}
+          }`}
         />
         {/* mobile menu overlay*/}
-        {width < breakpoints.xl && mobileMenu && (
+        {!showDesktopSidebar && mobileMenu && (
           <div
             className="overlay bg-slate-900/50 backdrop-filter backdrop-blur-sm opacity-100 fixed inset-0 z-[999]"
             onClick={() => setMobileMenu(false)}
@@ -92,8 +95,9 @@ export default function RootLayout({ children }) {
         <Settings />
 
         <div
-          className={`content-wrapper flex-1 overflow-y-auto transition-all duration-150 ${width > 1280 ? switchHeaderClass() : ""
-            }`}
+          className={`content-wrapper flex-1 overflow-y-auto transition-all duration-150 ${
+            showDesktopSidebar ? switchHeaderClass() : ""
+          }`}
         >
           {/* md:min-h-screen will h-full*/}
           <div className="page-content page-min-height p-6">
@@ -138,8 +142,8 @@ export default function RootLayout({ children }) {
       </div>
 
       {width < breakpoints.md && <MobileFooter />}
-      {width > breakpoints.md && (
-        <Footer className={width > breakpoints.xl ? switchHeaderClass() : ""} />
+      {width >= breakpoints.md && (
+        <Footer className={showDesktopSidebar ? switchHeaderClass() : ""} />
       )}
     </div>
   );

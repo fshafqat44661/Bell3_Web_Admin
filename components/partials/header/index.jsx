@@ -11,7 +11,7 @@ import Profile from "./Tools/Profile";
 import useRtl from "@/hooks/useRtl";
 import useMobileMenu from "@/hooks/useMobileMenu";
 
-const Header = ({ className = "custom-class" }) => {
+const Header = ({ className = "custom-class", showDesktopSidebar = true }) => {
   const [collapsed, setMenuCollapsed] = useSidebar();
   const { width, breakpoints } = useWidth();
   const [navbarType] = useNavbarType();
@@ -54,7 +54,7 @@ const Header = ({ className = "custom-class" }) => {
         className={` app-header md:px-6 px-[15px]  dark:bg-slate-800 shadow-base dark:shadow-base3 bg-white
         ${borderSwicthClass()}
              ${
-               menuType === "horizontal" && width > breakpoints.xl
+               menuType === "horizontal" && width >= breakpoints.xl
                  ? "py-1"
                  : "md:py-6 py-3"
              }
@@ -65,7 +65,7 @@ const Header = ({ className = "custom-class" }) => {
 
           {menuType === "vertical" && (
             <div className="flex items-center md:space-x-4 space-x-2 rtl:space-x-reverse">
-              {collapsed && width >= breakpoints.xl && (
+              {collapsed && showDesktopSidebar && (
                 <button
                   className="text-xl text-slate-900 dark:text-white"
                   onClick={() => setMenuCollapsed(!collapsed)}
@@ -77,19 +77,16 @@ const Header = ({ className = "custom-class" }) => {
                   )}
                 </button>
               )}
-              {width < breakpoints.xl &&
-                /*Logo*/
-                  <h1>Bell 3</h1>
-              }
-              {/* open mobile menu handlaer*/}
-              {width < breakpoints.xl && width >= breakpoints.md && (
+              {!showDesktopSidebar && (
                 <div
                   className="cursor-pointer text-slate-900 dark:text-white text-2xl"
                   onClick={handleOpenMobileMenu}
+                  aria-label="Open navigation menu"
                 >
                   <Icon icon="heroicons-outline:menu-alt-3" />
                 </div>
               )}
+              {!showDesktopSidebar && <h1 className="text-lg font-semibold">Bell3</h1>}
             </div>
           )}
           {/* For Horizontal  */}
@@ -98,7 +95,7 @@ const Header = ({ className = "custom-class" }) => {
               {/* LOGO */}
               <p>Bell 3</p>
               {/* open mobile menu handlaer*/}
-              {width <= breakpoints.xl && (
+              {width < breakpoints.xl && (
                 <div
                   className="cursor-pointer text-slate-900 dark:text-white text-2xl"
                   onClick={handleOpenMobileMenu}
@@ -115,15 +112,7 @@ const Header = ({ className = "custom-class" }) => {
           {/* Nav Tools  */}
           <div className="nav-tools flex items-center lg:space-x-6 space-x-3 rtl:space-x-reverse">
             <SwitchDark />
-            {width >= breakpoints.md && <Profile />}
-            {width <= breakpoints.md && (
-              <div
-                className="cursor-pointer text-slate-900 dark:text-white text-2xl"
-                onClick={handleOpenMobileMenu}
-              >
-                <Icon icon="heroicons-outline:menu-alt-3" />
-              </div>
-            )}
+            <Profile />
           </div>
         </div>
       </div>

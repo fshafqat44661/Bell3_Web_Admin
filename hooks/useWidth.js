@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 
 export default function useWidth() {
   const [width, setWidth] = useState(1920);
-  const [breakpoints, setBreakpoints] = useState({
-    sm: "640",
-    md: "768",
-    lg: "1024",
-    xl: "1280",
+  const [breakpoints] = useState({
+    sm: 640,
+    md: 768,
+    lg: 1024,
+    xl: 1280,
+    "2xl": 1536,
   });
 
   useEffect(() => {
