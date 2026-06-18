@@ -11,9 +11,13 @@ const CoinPackagesTable = ({
   onEdit,
   onToggle,
   toggleLoadingId,
+  coinsPerDollar = 10,
 }) => {
   return (
-    <GlassCard title="Coin Packages" subtitle="Manage Stripe coin packages — $1 = 10 coins">
+    <GlassCard
+      title="Coin Packages"
+      subtitle={`Manage Stripe coin packages — $1 = ${coinsPerDollar} coins`}
+    >
       <div className="overflow-x-auto">
         <table className="w-full min-w-[800px]">
           <thead>

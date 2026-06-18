@@ -6,8 +6,13 @@ import Modal from "@/components/ui/Modal";
 import FinanceStatCard from "@/components/finance/FinanceStatCard";
 import CoinPackagesTable from "@/components/finance/CoinPackagesTable";
 import CoinPackageForm from "@/components/finance/CoinPackageForm";
+import CoinRateCard from "@/components/finance/CoinRateCard";
+import CoinRateModal from "@/components/finance/CoinRateModal";
 import { financeApi } from "@/services/financeApi";
+import { walletSettingsApi } from "@/services/walletSettingsApi";
 import { formatUsd } from "@/components/finance/financeUtils";
+
+const DEFAULT_COINS_PER_DOLLAR = 10;
 
 const CoinPackagesPage = () => {
   const [packages, setPackages] = useState([]);
@@ -16,6 +21,27 @@ const CoinPackagesPage = () => {
   const [editingPackage, setEditingPackage] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [toggleLoadingId, setToggleLoadingId] = useState(null);
+
+  const [coinRateSetting, setCoinRateSetting] = useState(null);
+  const [coinsPerDollar, setCoinsPerDollar] = useState(DEFAULT_COINS_PER_DOLLAR);
+  const [rateLoading, setRateLoading] = useState(true);
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [rateSaving, setRateSaving] = useState(false);
+
+  const fetchCoinRate = useCallback(async () => {
+    try {
+      setRateLoading(true);
+      const setting = await walletSettingsApi.getCoinPerDollar();
+      setCoinRateSetting(setting);
+      if (setting?.value) {
+        setCoinsPerDollar(Number(setting.value));
+      }
+    } catch {
+      toast.error("Failed to load coin rate setting");
+    } finally {
+      setRateLoading(false);
+    }
+  }, []);
 
   const fetchPackages = useCallback(async () => {
     try {
@@ -30,10 +56,16 @@ const CoinPackagesPage = () => {
   }, []);
 
   useEffect(() => {
+    fetchCoinRate();
     fetchPackages();
-  }, [fetchPackages]);
+  }, [fetchCoinRate, fetchPackages]);
 
   const handleCreate = () => {
+    if (!coinRateSetting) {
+      toast.info("Please set up the base coin rate first");
+      setShowRateModal(true);
+      return;
+    }
     setEditingPackage(null);
     setShowModal(true);
   };
@@ -75,6 +107,31 @@ const CoinPackagesPage = () => {
     }
   };
 
+  const handleSaveRate = async (value) => {
+    try {
+      setRateSaving(true);
+      const res = await walletSettingsApi.saveCoinPerDollar(value, coinRateSetting);
+      const saved = res?.data;
+      setCoinRateSetting(saved);
+      setCoinsPerDollar(Number(saved?.value ?? value));
+      toast.success(
+        coinRateSetting
+          ? "Coin rate updated successfully"
+          : "Coin rate created successfully"
+      );
+      setShowRateModal(false);
+    } catch (error) {
+      const message =
+        error?.data?.message ||
+        (error?.status === 422
+          ? "Rate already exists — use update instead"
+          : "Failed to save coin rate");
+      toast.error(message);
+    } finally {
+      setRateSaving(false);
+    }
+  };
+
   const activeCount = packages.filter((p) => p.is_active).length;
   const totalRevenue = packages
     .filter((p) => p.is_active)
@@ -88,16 +145,31 @@ const CoinPackagesPage = () => {
             Coin Management
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Create and manage Stripe coin packages for users & creators
+            Set the base rate and manage Stripe coin packages for users & creators
           </p>
         </div>
-        <Button
-          text="Create Package"
-          className="bg-primary-500 text-white"
-          onClick={handleCreate}
-          icon="heroicons:plus-circle"
-        />
+        <div className="flex flex-wrap gap-3">
+          <Button
+            text={coinRateSetting ? "Update Base Rate" : "Set Up Base Rate"}
+            className="bg-warning-500 text-white"
+            onClick={() => setShowRateModal(true)}
+            icon="heroicons:currency-dollar"
+          />
+          <Button
+            text="Create Package"
+            className="bg-primary-500 text-white"
+            onClick={handleCreate}
+            icon="heroicons:plus-circle"
+          />
+        </div>
       </div>
+
+      <CoinRateCard
+        setting={coinRateSetting}
+        coinsPerDollar={coinsPerDollar}
+        isLoading={rateLoading}
+        onConfigure={() => setShowRateModal(true)}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <FinanceStatCard
@@ -114,8 +186,10 @@ const CoinPackagesPage = () => {
         />
         <FinanceStatCard
           label="Base Rate"
-          value="10 coins / $1"
-          subValue="Standard conversion rate"
+          value={`${coinsPerDollar} coins / $1`}
+          subValue={
+            coinRateSetting ? "Loaded from API" : "Using default until configured"
+          }
           icon="heroicons:currency-dollar"
           accent="warning"
         />
@@ -134,7 +208,23 @@ const CoinPackagesPage = () => {
         onEdit={handleEdit}
         onToggle={handleToggle}
         toggleLoadingId={toggleLoadingId}
+        coinsPerDollar={coinsPerDollar}
       />
+
+      <Modal
+        activeModal={showRateModal}
+        onClose={() => setShowRateModal(false)}
+        title={coinRateSetting ? "Update Coin Rate" : "Set Up Coin Rate"}
+        className="max-w-lg"
+        themeClass="bg-warning-500 dark:bg-warning-500"
+      >
+        <CoinRateModal
+          setting={coinRateSetting}
+          onSave={handleSaveRate}
+          onClose={() => setShowRateModal(false)}
+          isLoading={rateSaving}
+        />
+      </Modal>
 
       <Modal
         activeModal={showModal}
@@ -147,6 +237,7 @@ const CoinPackagesPage = () => {
           onSubmit={handleSubmit}
           onCancel={() => setShowModal(false)}
           isLoading={formLoading}
+          coinsPerDollar={coinsPerDollar}
         />
       </Modal>
     </div>

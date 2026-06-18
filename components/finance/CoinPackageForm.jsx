@@ -4,7 +4,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Textinput from "@/components/ui/Textinput";
 import Button from "@/components/ui/Button";
-import { COINS_PER_DOLLAR } from "@/services/financeMock";
 
 const schema = yup.object({
   name: yup.string().required("Package name is required"),
@@ -22,7 +21,7 @@ const schema = yup.object({
   stripe_price_id: yup.string().required("Stripe Price ID is required"),
 });
 
-const CoinPackageForm = ({ initialData, onSubmit, onCancel, isLoading }) => {
+const CoinPackageForm = ({ initialData, onSubmit, onCancel, isLoading, coinsPerDollar = 10 }) => {
   const isEdit = Boolean(initialData);
 
   const {
@@ -46,14 +45,14 @@ const CoinPackageForm = ({ initialData, onSubmit, onCancel, isLoading }) => {
 
   useEffect(() => {
     if (!isEdit && priceUsd) {
-      setValue("coins", Math.round(priceUsd * COINS_PER_DOLLAR));
+      setValue("coins", Math.round(priceUsd * coinsPerDollar));
     }
-  }, [priceUsd, isEdit, setValue]);
+  }, [priceUsd, isEdit, setValue, coinsPerDollar]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="rounded-xl border border-primary-500/20 bg-primary-500/5 p-3 text-sm text-primary-600 dark:text-primary-400">
-        Base rate: <strong>$1 = {COINS_PER_DOLLAR} coins</strong>. Price auto-calculates
+        Base rate: <strong>$1 = {coinsPerDollar} coins</strong>. Price auto-calculates
         coins for new packages.
       </div>
 
