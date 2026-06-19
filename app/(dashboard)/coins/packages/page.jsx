@@ -21,12 +21,17 @@ const CoinPackagesPage = () => {
   const [editingPackage, setEditingPackage] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [toggleLoadingId, setToggleLoadingId] = useState(null);
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [deletingPackage, setDeletingPackage] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(false);
 
   const [coinRateSetting, setCoinRateSetting] = useState(null);
   const [coinsPerDollar, setCoinsPerDollar] = useState(DEFAULT_COINS_PER_DOLLAR);
   const [rateLoading, setRateLoading] = useState(true);
   const [showRateModal, setShowRateModal] = useState(false);
   const [rateSaving, setRateSaving] = useState(false);
+  const [showDeleteRateModal, setShowDeleteRateModal] = useState(false);
+  const [rateDeleting, setRateDeleting] = useState(false);
 
   const fetchCoinRate = useCallback(async () => {
     try {
@@ -35,6 +40,8 @@ const CoinPackagesPage = () => {
       setCoinRateSetting(setting);
       if (setting?.value) {
         setCoinsPerDollar(Number(setting.value));
+      } else {
+        setCoinsPerDollar(DEFAULT_COINS_PER_DOLLAR);
       }
     } catch {
       toast.error("Failed to load coin rate setting");
@@ -107,6 +114,43 @@ const CoinPackagesPage = () => {
     }
   };
 
+  const handleDeleteClick = (pkg) => {
+    setDeletingPackage(pkg);
+    setDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingPackage) return;
+
+    try {
+      setDeleteLoadingId(deletingPackage.id);
+      await financeApi.deleteCoinPackage(deletingPackage.id);
+      toast.success("Package deleted successfully");
+      setDeleteModal(false);
+      setDeletingPackage(null);
+      fetchPackages();
+    } catch {
+      toast.error("Failed to delete package");
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
+
+  const handleDeleteRateConfirm = async () => {
+    try {
+      setRateDeleting(true);
+      await walletSettingsApi.deleteCoinPerDollar();
+      setCoinRateSetting(null);
+      setCoinsPerDollar(DEFAULT_COINS_PER_DOLLAR);
+      setShowDeleteRateModal(false);
+      toast.success("Coin rate deleted — you can set it up again");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete coin rate");
+    } finally {
+      setRateDeleting(false);
+    }
+  };
+
   const handleSaveRate = async (value) => {
     try {
       setRateSaving(true);
@@ -155,6 +199,14 @@ const CoinPackagesPage = () => {
             onClick={() => setShowRateModal(true)}
             icon="heroicons:currency-dollar"
           />
+          {coinRateSetting && (
+            <Button
+              text="Delete Base Rate"
+              className="bg-danger-500 text-white"
+              onClick={() => setShowDeleteRateModal(true)}
+              icon="heroicons:trash"
+            />
+          )}
           <Button
             text="Create Package"
             className="bg-primary-500 text-white"
@@ -169,6 +221,8 @@ const CoinPackagesPage = () => {
         coinsPerDollar={coinsPerDollar}
         isLoading={rateLoading}
         onConfigure={() => setShowRateModal(true)}
+        onDelete={() => setShowDeleteRateModal(true)}
+        isDeleting={rateDeleting}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -207,9 +261,74 @@ const CoinPackagesPage = () => {
         isLoading={isLoading}
         onEdit={handleEdit}
         onToggle={handleToggle}
+        onDelete={handleDeleteClick}
         toggleLoadingId={toggleLoadingId}
+        deleteLoadingId={deleteLoadingId}
         coinsPerDollar={coinsPerDollar}
       />
+
+      <Modal
+        activeModal={deleteModal}
+        onClose={() => {
+          setDeleteModal(false);
+          setDeletingPackage(null);
+        }}
+        title="Delete Package"
+        className="max-w-md"
+        themeClass="bg-danger-500 dark:bg-danger-500"
+        footerContent={
+          <>
+            <Button
+              text="Cancel"
+              className="bg-slate-200 text-slate-700"
+              onClick={() => {
+                setDeleteModal(false);
+                setDeletingPackage(null);
+              }}
+            />
+            <Button
+              text="Delete"
+              className="bg-danger-500 text-white"
+              isLoading={deleteLoadingId === deletingPackage?.id}
+              onClick={handleDeleteConfirm}
+            />
+          </>
+        }
+      >
+        <p className="text-slate-600 dark:text-slate-300">
+          Are you sure you want to delete{" "}
+          <strong>{deletingPackage?.name}</strong>? This cannot be undone.
+        </p>
+      </Modal>
+
+      <Modal
+        activeModal={showDeleteRateModal}
+        onClose={() => setShowDeleteRateModal(false)}
+        title="Delete Coin Rate"
+        className="max-w-md"
+        themeClass="bg-danger-500 dark:bg-danger-500"
+        footerContent={
+          <>
+            <Button
+              text="Cancel"
+              className="bg-slate-200 text-slate-700"
+              onClick={() => setShowDeleteRateModal(false)}
+            />
+            <Button
+              text="Delete Rate"
+              className="bg-danger-500 text-white"
+              isLoading={rateDeleting}
+              onClick={handleDeleteRateConfirm}
+            />
+          </>
+        }
+      >
+        <p className="text-slate-600 dark:text-slate-300">
+          Delete the base rate of{" "}
+          <strong>{coinsPerDollar} coins per $1</strong>? New packages cannot be
+          created until you set up the rate again.
+        </p>
+      </Modal>
 
       <Modal
         activeModal={showRateModal}

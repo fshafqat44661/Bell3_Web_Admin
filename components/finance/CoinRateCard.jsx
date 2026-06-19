@@ -4,7 +4,14 @@ import GlassCard from "@/components/finance/GlassCard";
 import Button from "@/components/ui/Button";
 import { formatDate } from "@/components/finance/financeUtils";
 
-const CoinRateCard = ({ setting, coinsPerDollar, isLoading, onConfigure }) => {
+const CoinRateCard = ({
+  setting,
+  coinsPerDollar,
+  isLoading,
+  onConfigure,
+  onDelete,
+  isDeleting,
+}) => {
   const isConfigured = Boolean(setting);
 
   return (
@@ -12,12 +19,23 @@ const CoinRateCard = ({ setting, coinsPerDollar, isLoading, onConfigure }) => {
       title="Base Coin Rate"
       subtitle="Platform-wide conversion: how many coins $1 buys"
       headerSlot={
-        <Button
-          text={isConfigured ? "Update Rate" : "Set Up Rate"}
-          className="bg-warning-500 text-white btn-sm"
-          onClick={onConfigure}
-          icon={isConfigured ? "heroicons:pencil-square" : "heroicons:plus-circle"}
-        />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            text={isConfigured ? "Update Rate" : "Set Up Rate"}
+            className="bg-warning-500 text-white btn-sm"
+            onClick={onConfigure}
+            icon={isConfigured ? "heroicons:pencil-square" : "heroicons:plus-circle"}
+          />
+          {isConfigured && (
+            <Button
+              text="Delete Rate"
+              className="bg-danger-500 text-white btn-sm"
+              onClick={onDelete}
+              isLoading={isDeleting}
+              icon="heroicons:trash"
+            />
+          )}
+        </div>
       }
     >
       {isLoading ? (

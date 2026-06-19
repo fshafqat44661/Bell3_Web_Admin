@@ -42,4 +42,8 @@ export const walletSettingsApi = {
     }
     return this.create(payload);
   },
+
+  deleteCoinPerDollar() {
+    return this.delete(COIN_PER_DOLLAR_KEY);
+  },
 };

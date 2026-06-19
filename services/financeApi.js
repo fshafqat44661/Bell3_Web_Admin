@@ -56,6 +56,15 @@ export const financeApi = {
       () => ({ data: financeMock.toggleCoinPackage(id, is_active) })
     ),
 
+  deleteCoinPackage: (id) =>
+    withFallback(
+      () =>
+        apiFetch(`admin/coin-packages/${id}`, {
+          method: "DELETE",
+        }),
+      () => ({ data: financeMock.deleteCoinPackage(id) })
+    ),
+
   getTransactions: (filters = {}) => {
     const params = new URLSearchParams(filters).toString();
     const query = params ? `?${params}` : "";

@@ -346,6 +346,15 @@ export const financeMock = {
     return this.updateCoinPackage(id, { is_active });
   },
 
+  deleteCoinPackage(id) {
+    const store = readStore();
+    const index = store.coinPackages.findIndex((p) => p.id === id);
+    if (index === -1) throw new Error("Package not found");
+    store.coinPackages.splice(index, 1);
+    writeStore(store);
+    return { success: true };
+  },
+
   getTransactions(filters = {}) {
     let items = [...readStore().transactions];
     if (filters.type) {

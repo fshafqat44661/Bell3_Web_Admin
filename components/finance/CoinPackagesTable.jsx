@@ -10,7 +10,9 @@ const CoinPackagesTable = ({
   isLoading,
   onEdit,
   onToggle,
+  onDelete,
   toggleLoadingId,
+  deleteLoadingId,
   coinsPerDollar = 10,
 }) => {
   return (
@@ -112,6 +114,14 @@ const CoinPackagesTable = ({
                             }
                             className="text-lg"
                           />
+                        </button>
+                        <button
+                          onClick={() => onDelete(pkg)}
+                          disabled={deleteLoadingId === pkg.id}
+                          className="rounded-lg p-2 text-danger-500 transition-colors hover:bg-danger-500/10"
+                          title="Delete package"
+                        >
+                          <Icon icon="heroicons:trash" className="text-lg" />
                         </button>
                       </div>
                     </td>
