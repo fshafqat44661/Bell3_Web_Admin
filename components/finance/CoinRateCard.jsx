@@ -44,10 +44,10 @@ const CoinRateCard = ({
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-warning-500/15">
+          <div className="flex h-16 w-16 items-center justify-center bg-warning-500/15">
             <Icon icon="heroicons:currency-dollar" className="text-3xl text-warning-500" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <p className="text-3xl font-bold text-slate-800 dark:text-white">
               {coinsPerDollar} coins <span className="text-lg font-normal text-slate-500">/ $1</span>
             </p>
@@ -57,7 +57,7 @@ const CoinRateCard = ({
                 : "Not configured yet — set the rate before creating packages"}
             </p>
           </div>
-          <div className="rounded-xl border border-slate-200/60 bg-white/50 px-4 py-3 dark:border-slate-600/40 dark:bg-slate-700/30">
+          <div className="border border-slate-200 bg-white px-4 py-3 dark:border-slate-600 dark:bg-slate-800">
             <p className="text-xs text-slate-500">$10 purchase</p>
             <p className="text-lg font-semibold text-slate-800 dark:text-white">
               {coinsPerDollar * 10} coins

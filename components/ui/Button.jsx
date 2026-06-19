@@ -4,6 +4,7 @@ import Link from "next/link";
 function Button({
   text,
   type = "button",
+  form,
   isLoading,
   disabled,
   className = "bg-primary-500 text-white",
@@ -21,6 +22,7 @@ function Button({
       {!link && !div && (
         <button
           type={type}
+          form={form}
           onClick={onClick}
           className={`btn btn inline-flex justify-center   ${
             isLoading ? " pointer-events-none" : ""

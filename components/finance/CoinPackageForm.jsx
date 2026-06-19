@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import React from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { Icon } from "@iconify/react";
 import Textinput from "@/components/ui/Textinput";
-import Button from "@/components/ui/Button";
+import { formatUsd, formatDate } from "@/components/finance/financeUtils";
 
 const schema = yup.object({
   name: yup.string().required("Package name is required"),
@@ -12,48 +13,75 @@ const schema = yup.object({
     .typeError("Coins must be a number")
     .positive("Coins must be positive")
     .required("Coins amount is required"),
-  price_usd: yup
-    .number()
-    .typeError("Price must be a number")
-    .positive("Price must be positive")
-    .required("Price is required"),
   bonus_coins: yup.number().min(0, "Bonus cannot be negative").default(0),
-  stripe_price_id: yup.string().required("Stripe Price ID is required"),
 });
 
-const CoinPackageForm = ({ initialData, onSubmit, onCancel, isLoading, coinsPerDollar = 10 }) => {
-  const isEdit = Boolean(initialData);
-
+const CoinPackageForm = ({
+  formId = "coin-package-form",
+  initialData,
+  onSubmit,
+  coinsPerDollar = 10,
+  coinRateSetting = null,
+}) => {
   const {
     register,
+    control,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
+    mode: "onChange",
     defaultValues: {
       name: initialData?.name || "",
       coins: initialData?.coins || 100,
-      price_usd: initialData?.price_usd || 10,
       bonus_coins: initialData?.bonus_coins || 0,
-      stripe_price_id: initialData?.stripe_price_id || "",
     },
   });
 
-  const priceUsd = watch("price_usd");
+  const coins = useWatch({ control, name: "coins" });
+  const coinCount = Number(coins) || 0;
+  const calculatedPrice =
+    coinCount > 0 && coinsPerDollar > 0
+      ? Number((coinCount / coinsPerDollar).toFixed(2))
+      : 0;
 
-  useEffect(() => {
-    if (!isEdit && priceUsd) {
-      setValue("coins", Math.round(priceUsd * coinsPerDollar));
-    }
-  }, [priceUsd, isEdit, setValue, coinsPerDollar]);
+  const handleFormSubmit = (data) => {
+    onSubmit({
+      ...data,
+      coins: Number(data.coins),
+      price_usd: Number((Number(data.coins) / coinsPerDollar).toFixed(2)),
+      bonus_coins: Number(data.bonus_coins) || 0,
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-xl border border-primary-500/20 bg-primary-500/5 p-3 text-sm text-primary-600 dark:text-primary-400">
-        Base rate: <strong>$1 = {coinsPerDollar} coins</strong>. Price auto-calculates
-        coins for new packages.
+    <form id={formId} onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      <div className="border border-slate-200 bg-white p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-slate-100 text-slate-600">
+            <Icon icon="heroicons:currency-dollar" className="text-lg" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Base Coin Rate
+            </p>
+            <p className="mt-1 text-lg font-bold text-slate-800">
+              {coinsPerDollar} coins / $1
+            </p>
+            {coinRateSetting ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Configured · active since {formatDate(coinRateSetting.created_at)}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-slate-500">
+                Set up the base rate on the page first
+              </p>
+            )}
+            <p className="mt-1 text-sm text-slate-600">
+              Price = coins ÷ {coinsPerDollar}
+            </p>
+          </div>
+        </div>
       </div>
 
       <Textinput
@@ -64,57 +92,64 @@ const CoinPackageForm = ({ initialData, onSubmit, onCancel, isLoading, coinsPerD
         error={errors.name}
       />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Textinput
-          label="Price (USD)"
-          type="number"
-          step="0.01"
-          placeholder="10.00"
-          register={register}
-          name="price_usd"
-          error={errors.price_usd}
-        />
-        <Textinput
-          label="Coins"
-          type="number"
-          placeholder="100"
-          register={register}
-          name="coins"
-          error={errors.coins}
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className="form-label mb-2 block capitalize">Coins</label>
+          <Controller
+            name="coins"
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="number"
+                min="1"
+                step="1"
+                placeholder="100"
+                onChange={(e) => field.onChange(e.target.valueAsNumber || "")}
+                className={`form-control w-full py-2 ${errors.coins ? "has-error" : ""}`}
+              />
+            )}
+          />
+          {errors.coins && (
+            <p className="mt-1 text-sm text-danger-500">{errors.coins.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="form-label mb-2 block capitalize">Bonus Coins</label>
+          <Controller
+            name="bonus_coins"
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                className={`form-control w-full py-2 ${
+                  errors.bonus_coins ? "has-error" : ""
+                }`}
+              />
+            )}
+          />
+          {errors.bonus_coins && (
+            <p className="mt-1 text-sm text-danger-500">{errors.bonus_coins.message}</p>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Textinput
-          label="Bonus Coins"
-          type="number"
-          placeholder="0"
-          register={register}
-          name="bonus_coins"
-          error={errors.bonus_coins}
-        />
-        <Textinput
-          label="Stripe Price ID"
-          placeholder="price_xxxxxxxx"
-          register={register}
-          name="stripe_price_id"
-          error={errors.stripe_price_id}
-        />
-      </div>
-
-      <div className="flex justify-end gap-3 pt-2">
-        <Button
-          type="button"
-          text="Cancel"
-          className="bg-slate-200 text-slate-700"
-          onClick={onCancel}
-        />
-        <Button
-          type="submit"
-          text={isEdit ? "Update Package" : "Create Package"}
-          className="bg-primary-500 text-white"
-          isLoading={isLoading}
-        />
+      <div className="border border-slate-200 bg-white p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Calculated Price
+        </p>
+        <p className="mt-1 text-2xl font-bold text-slate-800">
+          {formatUsd(calculatedPrice)}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          {coinCount} coins ÷ {coinsPerDollar} coins/$1 = {formatUsd(calculatedPrice)}
+        </p>
       </div>
     </form>
   );

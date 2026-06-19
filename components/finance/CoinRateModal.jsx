@@ -1,25 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import Textinput from "@/components/ui/Textinput";
-import Button from "@/components/ui/Button";
 import { formatDate } from "@/components/finance/financeUtils";
 
 const CoinRateModal = ({
+  formId = "coin-rate-form",
   setting,
   onSave,
-  onClose,
-  isLoading,
 }) => {
   const isCreate = !setting;
   const [rate, setRate] = useState("10");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (setting?.value) {
-      setRate(String(setting.value));
-    } else {
-      setRate("10");
-    }
+    setRate(setting?.value ? String(setting.value) : "10");
     setError("");
   }, [setting]);
 
@@ -41,23 +35,21 @@ const CoinRateModal = ({
     onSave(parsed);
   };
 
-  const previewUsd = 1;
   const previewCoins = Number(rate) || 0;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="rounded-xl border border-warning-500/20 bg-warning-500/5 p-4">
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+      <div className="border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-700/40">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-500/15 text-warning-500">
-            <Icon icon="heroicons:currency-dollar" className="text-xl" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-200">
+            <Icon icon="heroicons:currency-dollar" className="text-lg" />
           </div>
           <div>
             <p className="font-medium text-slate-800 dark:text-white">
               {isCreate ? "Set the base coin rate" : "Update the base coin rate"}
             </p>
             <p className="mt-1 text-sm text-slate-500">
-              This rate applies across the platform. The create API can only be
-              used once — after that, changes use update.
+              Create once, then update only. Applies across the platform.
             </p>
           </div>
         </div>
@@ -77,15 +69,15 @@ const CoinRateModal = ({
         {error && <p className="mt-1 text-sm text-danger-500">{error}</p>}
       </div>
 
-      <div className="rounded-xl border border-white/40 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-600/40 dark:bg-slate-700/30">
+      <div className="border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-700/40">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
           Preview
         </p>
         <p className="mt-2 text-lg font-semibold text-slate-800 dark:text-white">
-          ${previewUsd} = {previewCoins} coins
+          $1 = {previewCoins} coins
         </p>
         <p className="mt-1 text-sm text-slate-500">
-          A $10 package would include {previewCoins * 10} coins (before bonus)
+          A $10 package = {previewCoins * 10} coins (before bonus)
         </p>
       </div>
 
@@ -94,22 +86,6 @@ const CoinRateModal = ({
           Last updated: {formatDate(setting.updated_at)}
         </p>
       )}
-
-      <div className="flex justify-end gap-3">
-        <Button
-          type="button"
-          text="Cancel"
-          className="bg-slate-200 text-slate-700"
-          onClick={onClose}
-        />
-        <Button
-          type="submit"
-          text={isCreate ? "Create Rate" : "Update Rate"}
-          className="bg-warning-500 text-white"
-          isLoading={isLoading}
-          icon={isCreate ? "heroicons:plus-circle" : "heroicons:pencil-square"}
-        />
-      </div>
     </form>
   );
 };

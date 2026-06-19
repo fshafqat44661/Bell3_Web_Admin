@@ -182,7 +182,7 @@ const CoinPackagesPage = () => {
     .reduce((sum, p) => sum + p.price_usd, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-full space-y-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
@@ -275,12 +275,13 @@ const CoinPackagesPage = () => {
         }}
         title="Delete Package"
         className="max-w-md"
-        themeClass="bg-danger-500 dark:bg-danger-500"
+        centered
+        fixedLayout
         footerContent={
           <>
             <Button
               text="Cancel"
-              className="bg-slate-200 text-slate-700"
+              className="rounded-none bg-slate-200 text-slate-700"
               onClick={() => {
                 setDeleteModal(false);
                 setDeletingPackage(null);
@@ -288,7 +289,7 @@ const CoinPackagesPage = () => {
             />
             <Button
               text="Delete"
-              className="bg-danger-500 text-white"
+              className="rounded-none bg-danger-500 text-white"
               isLoading={deleteLoadingId === deletingPackage?.id}
               onClick={handleDeleteConfirm}
             />
@@ -306,17 +307,18 @@ const CoinPackagesPage = () => {
         onClose={() => setShowDeleteRateModal(false)}
         title="Delete Coin Rate"
         className="max-w-md"
-        themeClass="bg-danger-500 dark:bg-danger-500"
+        centered
+        fixedLayout
         footerContent={
           <>
             <Button
               text="Cancel"
-              className="bg-slate-200 text-slate-700"
+              className="rounded-none bg-slate-200 text-slate-700"
               onClick={() => setShowDeleteRateModal(false)}
             />
             <Button
               text="Delete Rate"
-              className="bg-danger-500 text-white"
+              className="rounded-none bg-danger-500 text-white"
               isLoading={rateDeleting}
               onClick={handleDeleteRateConfirm}
             />
@@ -335,14 +337,26 @@ const CoinPackagesPage = () => {
         onClose={() => setShowRateModal(false)}
         title={coinRateSetting ? "Update Coin Rate" : "Set Up Coin Rate"}
         className="max-w-lg"
-        themeClass="bg-warning-500 dark:bg-warning-500"
+        centered
+        fixedLayout
+        footerContent={
+          <>
+            <Button
+              text="Cancel"
+              className="rounded-none bg-slate-200 text-slate-700"
+              onClick={() => setShowRateModal(false)}
+            />
+            <Button
+              text={coinRateSetting ? "Update Rate" : "Create Rate"}
+              type="submit"
+              form="coin-rate-form"
+              className="rounded-none bg-slate-700 text-white"
+              isLoading={rateSaving}
+            />
+          </>
+        }
       >
-        <CoinRateModal
-          setting={coinRateSetting}
-          onSave={handleSaveRate}
-          onClose={() => setShowRateModal(false)}
-          isLoading={rateSaving}
-        />
+        <CoinRateModal setting={coinRateSetting} onSave={handleSaveRate} />
       </Modal>
 
       <Modal
@@ -350,13 +364,31 @@ const CoinPackagesPage = () => {
         onClose={() => setShowModal(false)}
         title={editingPackage ? "Update Package Pricing" : "Create Coin Package"}
         className="max-w-lg"
+        centered
+        fixedLayout
+        footerContent={
+          <>
+            <Button
+              text="Cancel"
+              className="rounded-none bg-slate-200 text-slate-700"
+              onClick={() => setShowModal(false)}
+            />
+            <Button
+              text={editingPackage ? "Update Package" : "Create Package"}
+              type="submit"
+              form="coin-package-form"
+              className="rounded-none bg-slate-700 text-white"
+              isLoading={formLoading}
+            />
+          </>
+        }
       >
         <CoinPackageForm
+          key={editingPackage?.id ?? "new"}
           initialData={editingPackage}
           onSubmit={handleSubmit}
-          onCancel={() => setShowModal(false)}
-          isLoading={formLoading}
           coinsPerDollar={coinsPerDollar}
+          coinRateSetting={coinRateSetting}
         />
       </Modal>
     </div>
