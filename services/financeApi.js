@@ -1,5 +1,6 @@
 import { apiFetch } from "@/configs/api";
 import { financeMock } from "@/services/financeMock";
+import { packagesApi } from "@/services/packagesApi";
 
 const USE_MOCK =
   process.env.NEXT_PUBLIC_USE_FINANCE_MOCK !== "false";
@@ -19,49 +20,69 @@ async function withFallback(apiCall, mockCall) {
   }
 }
 
+function toApiStatus(isActive) {
+  return isActive === false ? "0" : "1";
+}
+
 export const financeApi = {
-  getCoinPackages: () =>
+  getCoinPackages: (coinsPerDollar = 10) =>
     withFallback(
-      () => apiFetch("admin/coin-packages"),
+      () => packagesApi.list(coinsPerDollar),
       () => ({ data: financeMock.getCoinPackages() })
     ),
 
-  createCoinPackage: (payload) =>
+  getCoinPackage: (id, coinsPerDollar = 10) =>
+    withFallback(
+      () => packagesApi.show(id, coinsPerDollar),
+      () => {
+        const pkg = financeMock.getCoinPackages().find((p) => p.id === id);
+        if (!pkg) throw Object.assign(new Error("Package not found"), { status: 404 });
+        return { data: pkg };
+      }
+    ),
+
+  createCoinPackage: (payload, coinsPerDollar = 10) =>
     withFallback(
       () =>
-        apiFetch("admin/coin-packages", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        }),
+        packagesApi.create(
+          {
+            name: payload.name,
+            coins: payload.coins,
+            bonus_coins: payload.bonus_coins ?? 0,
+            status: toApiStatus(payload.is_active),
+          },
+          coinsPerDollar
+        ),
       () => ({ data: financeMock.createCoinPackage(payload) })
     ),
 
-  updateCoinPackage: (id, payload) =>
+  updateCoinPackage: (id, payload, coinsPerDollar = 10) =>
     withFallback(
       () =>
-        apiFetch(`admin/coin-packages/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        }),
+        packagesApi.update(
+          {
+            id,
+            name: payload.name,
+            coins: payload.coins,
+            bonus_coins: payload.bonus_coins ?? 0,
+            status: toApiStatus(
+              payload.is_active !== undefined ? payload.is_active : true
+            ),
+          },
+          coinsPerDollar
+        ),
       () => ({ data: financeMock.updateCoinPackage(id, payload) })
     ),
 
-  toggleCoinPackage: (id, is_active) =>
+  toggleCoinPackage: (pkg, coinsPerDollar = 10) =>
     withFallback(
-      () =>
-        apiFetch(`admin/coin-packages/${id}/toggle`, {
-          method: "PATCH",
-          body: JSON.stringify({ is_active }),
-        }),
-      () => ({ data: financeMock.toggleCoinPackage(id, is_active) })
+      () => packagesApi.toggle(pkg, coinsPerDollar),
+      () => ({ data: financeMock.toggleCoinPackage(pkg.id, !pkg.is_active) })
     ),
 
   deleteCoinPackage: (id) =>
     withFallback(
-      () =>
-        apiFetch(`admin/coin-packages/${id}`, {
-          method: "DELETE",
-        }),
+      () => packagesApi.destroy(id),
       () => ({ data: financeMock.deleteCoinPackage(id) })
     ),
 

@@ -53,14 +53,14 @@ const CoinPackagesPage = () => {
   const fetchPackages = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await financeApi.getCoinPackages();
+      const res = await financeApi.getCoinPackages(coinsPerDollar);
       setPackages(res.data || res);
     } catch {
       toast.error("Failed to load coin packages");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [coinsPerDollar]);
 
   useEffect(() => {
     fetchCoinRate();
@@ -86,16 +86,23 @@ const CoinPackagesPage = () => {
     try {
       setFormLoading(true);
       if (editingPackage) {
-        await financeApi.updateCoinPackage(editingPackage.id, data);
+        await financeApi.updateCoinPackage(
+          editingPackage.id,
+          { ...data, is_active: editingPackage.is_active },
+          coinsPerDollar
+        );
         toast.success("Package updated successfully");
       } else {
-        await financeApi.createCoinPackage({ ...data, is_active: true });
+        await financeApi.createCoinPackage(
+          { ...data, is_active: true },
+          coinsPerDollar
+        );
         toast.success("Package created successfully");
       }
       setShowModal(false);
       fetchPackages();
-    } catch {
-      toast.error("Failed to save package");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to save package");
     } finally {
       setFormLoading(false);
     }
@@ -104,11 +111,11 @@ const CoinPackagesPage = () => {
   const handleToggle = async (pkg) => {
     try {
       setToggleLoadingId(pkg.id);
-      await financeApi.toggleCoinPackage(pkg.id, !pkg.is_active);
+      await financeApi.toggleCoinPackage(pkg, coinsPerDollar);
       toast.success(pkg.is_active ? "Package disabled" : "Package enabled");
       fetchPackages();
-    } catch {
-      toast.error("Failed to update package status");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to update package status");
     } finally {
       setToggleLoadingId(null);
     }
@@ -129,8 +136,8 @@ const CoinPackagesPage = () => {
       setDeleteModal(false);
       setDeletingPackage(null);
       fetchPackages();
-    } catch {
-      toast.error("Failed to delete package");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete package");
     } finally {
       setDeleteLoadingId(null);
     }
@@ -179,7 +186,13 @@ const CoinPackagesPage = () => {
   const activeCount = packages.filter((p) => p.is_active).length;
   const totalRevenue = packages
     .filter((p) => p.is_active)
-    .reduce((sum, p) => sum + p.price_usd, 0);
+    .reduce(
+      (sum, p) =>
+        sum +
+        (p.price_usd ??
+          (coinsPerDollar > 0 ? Number((p.coins / coinsPerDollar).toFixed(2)) : 0)),
+      0
+    );
 
   return (
     <div className="max-w-full space-y-6 overflow-x-hidden">

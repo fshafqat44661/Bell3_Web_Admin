@@ -66,8 +66,13 @@ const CoinPackagesTable = ({
             ) : (
               packages.map((pkg) => {
                 const totalCoins = pkg.coins + (pkg.bonus_coins || 0);
-                const rate = pkg.price_usd
-                  ? (totalCoins / pkg.price_usd).toFixed(1)
+                const priceUsd =
+                  pkg.price_usd ??
+                  (coinsPerDollar > 0
+                    ? Number((pkg.coins / coinsPerDollar).toFixed(2))
+                    : 0);
+                const rate = priceUsd
+                  ? (totalCoins / priceUsd).toFixed(1)
                   : coinsPerDollar;
 
                 return (
@@ -95,7 +100,7 @@ const CoinPackagesTable = ({
                       {pkg.bonus_coins ? `+${formatCoins(pkg.bonus_coins)}` : "—"}
                     </td>
                     <td className={`${tdClass} whitespace-nowrap font-medium`}>
-                      {formatUsd(pkg.price_usd)}
+                      {formatUsd(priceUsd)}
                     </td>
                     <td className={`${tdClass} hidden whitespace-nowrap text-slate-500 lg:table-cell`}>
                       {rate}/$
