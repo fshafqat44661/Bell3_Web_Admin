@@ -35,6 +35,9 @@ const Textinput = ({
     setOpen(!open);
   };
 
+  const isPasswordToggle = hasicon && type === "password";
+  const inputPaddingClass = isPasswordToggle ? "pr-10" : "";
+
   return (
     <div
       className={`fromGroup  ${error ? "has-error" : ""}  ${
@@ -59,7 +62,7 @@ const Textinput = ({
             {...rest}
             className={`${
               error ? " has-error" : " "
-            } form-control py-2 ${className}  `}
+            } form-control py-2 ${inputPaddingClass} ${className}  `}
             placeholder={placeholder}
             readOnly={readonly}
             defaultValue={defaultValue}
@@ -71,7 +74,7 @@ const Textinput = ({
         {!name && !isMask && (
           <input
             type={type === "password" && open === true ? "text" : type}
-            className={`form-control py-2 ${className}`}
+            className={`form-control py-2 ${inputPaddingClass} ${className}`}
             placeholder={placeholder}
             readOnly={readonly}
             disabled={disabled}
@@ -88,7 +91,7 @@ const Textinput = ({
             options={options}
             className={`${
               error ? " has-error" : " "
-            } form-control py-2 ${className}  `}
+            } form-control py-2 ${inputPaddingClass} ${className}  `}
             onFocus={onFocus}
             id={id}
             readOnly={readonly}
@@ -102,7 +105,7 @@ const Textinput = ({
             options={options}
             className={`${
               error ? " has-error" : " "
-            } form-control py-2 ${className}  `}
+            } form-control py-2 ${inputPaddingClass} ${className}  `}
             onFocus={onFocus}
             id={id}
             readOnly={readonly}
@@ -111,11 +114,26 @@ const Textinput = ({
           />
         )}
         {/* icon */}
-        <div className="flex text-xl absolute ltr:right-[14px] rtl:left-[14px] top-1/2 -translate-y-1/2  space-x-1 rtl:space-x-reverse">
+        <div
+          className={`flex text-xl absolute top-1/2 -translate-y-1/2 space-x-1 ${
+            isPasswordToggle
+              ? "right-3"
+              : "ltr:right-[14px] rtl:left-[14px] rtl:space-x-reverse"
+          }`}
+        >
           {hasicon && (
             <span
               className="cursor-pointer text-secondary-500"
               onClick={handleOpen}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleOpen();
+                }
+              }}
+              aria-label={open ? "Hide password" : "Show password"}
             >
               {open && type === "password" && (
                 <Icon icon="heroicons-outline:eye" />

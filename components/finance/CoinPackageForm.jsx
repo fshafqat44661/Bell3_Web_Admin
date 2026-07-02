@@ -13,7 +13,14 @@ const schema = yup.object({
     .typeError("Coins must be a number")
     .positive("Coins must be positive")
     .required("Coins amount is required"),
-  bonus_coins: yup.number().min(0, "Bonus cannot be negative").default(0),
+  bonus_coins: yup
+    .mixed()
+    .transform((value) => {
+      if (value === "" || value === null || value === undefined) return 0;
+      const n = Number(value);
+      return Number.isNaN(n) ? 0 : n;
+    })
+    .test("min", "Bonus cannot be negative", (v) => v >= 0),
 });
 
 const CoinPackageForm = ({
@@ -34,7 +41,10 @@ const CoinPackageForm = ({
     defaultValues: {
       name: initialData?.name || "",
       coins: initialData?.coins || 100,
-      bonus_coins: initialData?.bonus_coins || 0,
+      bonus_coins:
+        initialData?.bonus_coins != null && initialData.bonus_coins !== ""
+          ? initialData.bonus_coins
+          : "",
     },
   });
 
@@ -46,10 +56,12 @@ const CoinPackageForm = ({
       : 0;
 
   const handleFormSubmit = (data) => {
+    const price = Number((Number(data.coins) / coinsPerDollar).toFixed(2));
     onSubmit({
       ...data,
       coins: Number(data.coins),
-      price_usd: Number((Number(data.coins) / coinsPerDollar).toFixed(2)),
+      price,
+      price_usd: price,
       bonus_coins: Number(data.bonus_coins) || 0,
     });
   };
@@ -122,12 +134,18 @@ const CoinPackageForm = ({
             control={control}
             render={({ field }) => (
               <input
-                {...field}
                 type="number"
                 min="0"
                 step="1"
                 placeholder="0"
-                onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                value={field.value === "" ? "" : field.value}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  field.onChange(next === "" ? "" : Number(next));
+                }}
                 className={`form-control w-full py-2 ${
                   errors.bonus_coins ? "has-error" : ""
                 }`}

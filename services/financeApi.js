@@ -50,6 +50,7 @@ export const financeApi = {
             coins: payload.coins,
             bonus_coins: payload.bonus_coins ?? 0,
             status: toApiStatus(payload.is_active),
+            price: payload.price ?? payload.price_usd,
           },
           coinsPerDollar
         ),
@@ -68,6 +69,7 @@ export const financeApi = {
             status: toApiStatus(
               payload.is_active !== undefined ? payload.is_active : true
             ),
+            price: payload.price ?? payload.price_usd,
           },
           coinsPerDollar
         ),

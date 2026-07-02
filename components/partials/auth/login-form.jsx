@@ -109,11 +109,12 @@ const LoginForm = () => {
       />
       <Textinput
         name="password"
-        label="passwrod"
+        label="password"
         type="password"
         defaultValue="Testtest1"
         register={register}
         error={errors.password}
+        hasicon
       />
 
       <button className="btn btn-dark block w-full text-center" type="submit" disabled={loading}>

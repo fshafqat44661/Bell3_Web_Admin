@@ -76,6 +76,13 @@ export const menuItems = [
     link: '/coins/packages'
   },
   {
+    title: "Gift Management",
+    icon: "heroicons-outline:gift",
+    isOpen: true,
+    isHide: true,
+    link: '/gifts'
+  },
+  {
     title: "Transactions",
     icon: "heroicons-outline:arrows-right-left",
     isOpen: true,

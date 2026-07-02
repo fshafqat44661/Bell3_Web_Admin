@@ -50,15 +50,20 @@ export async function apiFetch(path, options = {}) {
   return response;
 }
 
-export async function apiFetchForm(path, formData, options = {}) {
+export async function apiFetchForm(path, body, options = {}) {
+  const isUrlEncoded = body instanceof URLSearchParams;
+
   const response = await fetch(apiUrl(path), {
     method: "POST",
     ...options,
     headers: {
       ...getAuthHeaders({}, { json: false }),
+      ...(isUrlEncoded
+        ? { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" }
+        : {}),
       ...(options.headers || {}),
     },
-    body: formData,
+    body,
   });
 
   if (!response.ok) {

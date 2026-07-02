@@ -19,6 +19,7 @@ export function normalizePackage(pkg, coinsPerDollar = 10) {
   const bonus_coins = Number(pkg.bonus_coins) || 0;
   const status = pkg.status;
   const is_active = status === "1" || status === 1 || status === true;
+  const priceFromApi = pkg.price ?? pkg.price_usd;
 
   return {
     id: Number(pkg.id),
@@ -28,10 +29,23 @@ export function normalizePackage(pkg, coinsPerDollar = 10) {
     status: String(status ?? "1"),
     is_active,
     price_usd:
-      coinsPerDollar > 0 ? Number((coins / coinsPerDollar).toFixed(2)) : 0,
+      priceFromApi != null && priceFromApi !== ""
+        ? Number(priceFromApi)
+        : coinsPerDollar > 0
+          ? Number((coins / coinsPerDollar).toFixed(2))
+          : 0,
     created_at: pkg.created_at,
     updated_at: pkg.updated_at,
   };
+}
+
+function resolvePrice({ price, price_usd, coins }, coinsPerDollar = 10) {
+  if (price != null && price !== "") return Number(price);
+  if (price_usd != null && price_usd !== "") return Number(price_usd);
+  const coinCount = Number(coins) || 0;
+  return coinCount > 0 && coinsPerDollar > 0
+    ? Number((coinCount / coinsPerDollar).toFixed(2))
+    : 0;
 }
 
 function unwrapList(res, coinsPerDollar) {
@@ -64,12 +78,13 @@ export const packagesApi = {
   },
 
   create(
-    { name, coins, bonus_coins = 0, status = "1" },
+    { name, coins, bonus_coins = 0, status = "1", price, price_usd },
     coinsPerDollar = 10
   ) {
+    const resolvedPrice = resolvePrice({ price, price_usd, coins }, coinsPerDollar);
     return apiFetchForm(
       BASE,
-      toFormData({ name, coins, bonus_coins, status })
+      toFormData({ name, coins, bonus_coins, status, price: resolvedPrice })
     ).then((res) => ({
       data: unwrapOne(res, coinsPerDollar),
       raw: res,
@@ -77,12 +92,13 @@ export const packagesApi = {
   },
 
   update(
-    { id, name, coins, bonus_coins = 0, status },
+    { id, name, coins, bonus_coins = 0, status, price, price_usd },
     coinsPerDollar = 10
   ) {
+    const resolvedPrice = resolvePrice({ price, price_usd, coins }, coinsPerDollar);
     return apiFetchForm(
       `${BASE}/update`,
-      toFormData({ id, name, coins, bonus_coins, status })
+      toFormData({ id, name, coins, bonus_coins, status, price: resolvedPrice })
     ).then((res) => ({
       data: unwrapOne(res, coinsPerDollar),
       raw: res,
@@ -102,6 +118,7 @@ export const packagesApi = {
         coins: pkg.coins,
         bonus_coins: pkg.bonus_coins || 0,
         status: nextStatus,
+        price: pkg.price_usd,
       },
       coinsPerDollar
     );
