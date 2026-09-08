@@ -110,9 +110,17 @@ export const menuItems = [
     isHide: true,
     link: '/users/wallets'
   },
-
-
-
+  {
+    isHeadr: true,
+    title: "growth",
+  },
+  {
+    title: "Referrals",
+    icon: "heroicons-outline:user-plus",
+    isOpen: true,
+    isHide: true,
+    link: '/referrals',
+  },
 
   //
   // {
