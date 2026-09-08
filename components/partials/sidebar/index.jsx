@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import SidebarLogo from "./Logo";
 import Navmenu from "./Navmenu";
+import SidebarFooter from "./SidebarFooter";
 import { menuItems } from "@/constant/data";
 import SimpleBar from "simplebar-react";
 import useSidebar from "@/hooks/useSidebar";
@@ -12,27 +13,25 @@ const Sidebar = () => {
   const [scroll, setScroll] = useState(false);
 
   useEffect(() => {
+    const node = scrollableNodeRef.current;
+    if (!node) return;
+
     const handleScroll = () => {
-      if (scrollableNodeRef.current.scrollTop > 0) {
-        setScroll(true);
-      } else {
-        setScroll(false);
-      }
+      setScroll(node.scrollTop > 0);
     };
-    scrollableNodeRef.current.addEventListener("scroll", handleScroll);
-  }, [scrollableNodeRef]);
+    node.addEventListener("scroll", handleScroll);
+    return () => node.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const [collapsed, setMenuCollapsed] = useSidebar();
   const [menuHover, setMenuHover] = useState(false);
-
-  // semi dark option
   const [isSemiDark] = useSemiDark();
-  // skin
   const [skin] = useSkin();
+
   return (
     <div className={isSemiDark ? "dark" : ""}>
       <div
-        className={`sidebar-wrapper bg-white dark:bg-slate-800     ${
+        className={`sidebar-wrapper flex h-screen flex-col bg-white dark:bg-slate-800 ${
           collapsed ? "w-[72px] close_sidebar" : "w-[248px]"
         }
       ${menuHover ? "sidebar-hovered" : ""}
@@ -49,19 +48,27 @@ const Sidebar = () => {
           setMenuHover(false);
         }}
       >
-        <SidebarLogo menuHover={menuHover} />
-        <div
-          className={`h-[60px]  absolute top-[80px] nav-shadow z-[1] w-full transition-all duration-200 pointer-events-none ${
-            scroll ? " opacity-100" : " opacity-0"
-          }`}
-        ></div>
+        <div className="shrink-0">
+          <SidebarLogo menuHover={menuHover} />
+        </div>
 
+        <div
+          className={`pointer-events-none absolute top-[80px] z-[1] h-[60px] w-full transition-all duration-200 nav-shadow ${
+            scroll ? "opacity-100" : "opacity-0"
+          }`}
+        />
+
+        {/* Scrollable nav only — logo + footer stay fixed */}
         <SimpleBar
-          className="sidebar-menu px-4 h-[calc(100%-80px)]"
+          className="sidebar-menu min-h-0 flex-1 px-4"
           scrollableNodeProps={{ ref: scrollableNodeRef }}
         >
-          <Navmenu menus={menuItems} />
+          <div className="pb-4">
+            <Navmenu menus={menuItems} />
+          </div>
         </SimpleBar>
+
+        <SidebarFooter />
       </div>
     </div>
   );
