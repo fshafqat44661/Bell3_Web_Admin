@@ -72,9 +72,9 @@
 .close_sidebar .menulabel {
   @apply hidden;
 }
-.menu-badge {
-  @apply py-1 px-2 text-xs capitalize font-semibold rounded-[.358rem] whitespace-nowrap align-baseline inline-flex bg-slate-900 text-slate-50 dark:bg-slate-700 dark:text-slate-300;
-}
+  .menu-badge {
+    @apply py-1 px-2 text-xs capitalize font-semibold rounded-[.358rem] whitespace-nowrap align-baseline inline-flex bg-primary-500 text-white dark:bg-primary-500 dark:text-white;
+  }
 
 .close_sidebar:not(.sidebar-hovered) {
   .menu-arrow {
